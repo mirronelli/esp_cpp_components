@@ -1,5 +1,7 @@
-# esp_cpp_components
-A simple c++ wrapping library on top of some ESP IDF apis. I started writing this library for my own projects, so that exposing esp apis is simpler and object oriented. Feel free to use it or suggest changes.
+# C++ components for the ESP IDF platform.
+
+THIS REPO IS NOT AN OFFICIAL PART OF THE ESP PLATFORM. 
+It is rather a simple c++ wrapping library on top of some ESP IDF apis. I started writing this library for my own projects, so that exposing esp idf apis is simpler and object oriented. Feel free to use it or suggest changes.
 
 The library uses the CMake component mechanism as described at: https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html.
 
