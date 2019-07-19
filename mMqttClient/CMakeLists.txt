@@ -1,0 +1,9 @@
+idf_component_register(
+	SRCS
+		"mMqttClient.cpp" 
+    INCLUDE_DIRS
+		"include"
+	REQUIRES 
+		"mqtt"
+)
+component_compile_options(-std=c++17)

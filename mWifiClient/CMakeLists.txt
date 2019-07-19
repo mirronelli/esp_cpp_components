@@ -1,0 +1,9 @@
+idf_component_register(
+	SRCS
+		"mWifiClient.cpp" 
+    INCLUDE_DIRS
+		"include"
+	REQUIRES 
+		"nvs_flash"
+)
+component_compile_options(-std=c++17)

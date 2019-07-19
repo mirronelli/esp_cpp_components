@@ -1,0 +1,7 @@
+# put here your custom config value
+menu "DHT11"
+config DHT_GPIO_PIN
+    string "GPIO Pin"
+    help
+	Data ping DTH11 is connected to.
+endmenu

@@ -1,0 +1,13 @@
+# put here your custom config value
+menu "mWifi"
+config MWIFI_SSID
+    string "Wifi SSID"
+    help
+		SSID of network to connect to.
+
+config MWIFI_PASSWORD
+    string "Wifi Password"
+    help
+		Password for network.
+
+endmenu
