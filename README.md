@@ -27,3 +27,5 @@ set(COMPONENTS
 
 project(YourProjectName)
 ```
+
+Some work has been inspired by https://github.com/nkolban/esp32-snippets. 
