@@ -87,10 +87,15 @@ bool mMqttClient::IsConnected()
 	return isConnected;
 }
 
-void mMqttClient::Subscribe(std::string topic, int qos, messageHandler handler)
+void mMqttClient::Subscribe(std::string topic, int qos, messageHandler handler, void * arg)
 {
 	esp_mqtt_client_subscribe(this->clientHandle, topic.c_str(), qos);
-	handlers.insert_or_assign(topic, handler);
+	
+	mMqttHandler handlerStruct;
+	handlerStruct.arg = arg;
+	handlerStruct.handler = handler;
+
+	handlers.insert_or_assign(topic, handlerStruct);
 }
 
 void mMqttClient::DispatchMessage(string topic, string message)
@@ -99,6 +104,7 @@ void mMqttClient::DispatchMessage(string topic, string message)
 	if (handlers.count(topic) > 0)
 	{
 		ESP_LOGI(logTag, "Found handler, dipatching...");
-		handlers[topic](message);
+		mMqttHandler handlerStruct = handlers[topic];
+		handlerStruct.handler(topic, message, handlerStruct.arg);
 	}
 }
