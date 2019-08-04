@@ -105,7 +105,7 @@ bool mWifiClient::Connect(uint16_t timeout)
 	ESP_ERROR_CHECK(esp_wifi_start());
 	ESP_ERROR_CHECK(esp_wifi_connect());
 
-	EventBits_t waitResult = xEventGroupWaitBits(eventGroup, WIFI_CONNECTED_BIT, false, true, timeout / portTICK_PERIOD_MS);
+	EventBits_t waitResult = xEventGroupWaitBits(eventGroup, WIFI_CONNECTED_BIT, false, true, timeout / portTICK_RATE_MS);
 	if ((waitResult & WIFI_CONNECTED_BIT) == WIFI_CONNECTED_BIT)
 		isConnected = true;
 
