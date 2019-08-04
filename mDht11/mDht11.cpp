@@ -18,7 +18,7 @@ mDht11Measure mDht11Sensor::Read()
 	mDht11Measure result;
 	int64_t time = esp_timer_get_time();
 	if (time < 2000000){
-		vTaskDelay((2000 - time/1000ULL)/portTICK_PERIOD_MS);
+		vTaskDelay((2000 - time/1000ULL)/portTICK_RATE_MS);
 	} else if (time - lastResultTime < 2000000) 
 	{
 		ESP_LOGV(logTag, "Returning early with last result since not enough time has passed for the sensor to respond again.");

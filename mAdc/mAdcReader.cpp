@@ -71,7 +71,7 @@ int mAdcReader::ReadAverage(adc1_channel_t pin, adc_atten_t attentuation, int me
 		//ESP_LOGI("Getting Moving Average Measure", "Raw: %d\tSum: %d\tMovingAverage: %d", raw, sum, sum / i);
 		if (delayMilis > 0)
 		{
-			vTaskDelay(delayMilis / portTICK_PERIOD_MS);
+			vTaskDelay(delayMilis / portTICK_RATE_MS);
 		}
 	}
 
@@ -112,7 +112,7 @@ shared_ptr<MultiMeasure> mAdcReader::ReadMultiMeasure(adc1_channel_t pin, adc_at
 		//ESP_LOGI("Getting Moving Average Measure", "Raw: %d\tSum: %d\tMovingAverage: %d", measure->value, sum, multiMeasure->Avg);
 		if (delayMilis > 0)
 		{
-			vTaskDelay(delayMilis / portTICK_PERIOD_MS);
+			vTaskDelay(delayMilis / portTICK_RATE_MS);
 		}
 	}
 
