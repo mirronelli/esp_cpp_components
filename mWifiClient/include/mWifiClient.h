@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h" 
+#include "esp_event_base.h"
 
 #include <string>
 
