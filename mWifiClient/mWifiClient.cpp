@@ -73,6 +73,7 @@ void mWifiClient::Init()
 	if (!initialized)
 	{
 		ESP_LOGI(logTag, "Initializing wifi");
+		nvs_flash_init();
 		tcpip_adapter_init();
 
 		eventGroup = xEventGroupCreate();
@@ -101,7 +102,7 @@ bool mWifiClient::Connect(uint16_t timeout)
 
 	numRetries = 0;
 
-	ESP_LOGI(logTag, "Connecting to: __%s__\t:\t__*****__", ssid.c_str());
+	ESP_LOGI(logTag, "Connecting to AP: %s", ssid.c_str());
 	ESP_ERROR_CHECK(esp_wifi_start());
 	ESP_ERROR_CHECK(esp_wifi_connect());
 
