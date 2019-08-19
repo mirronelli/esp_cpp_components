@@ -8,9 +8,9 @@ mI2cMaster::mI2cMaster(i2c_port_t port, gpio_num_t pinSda, gpio_num_t pinClk, ui
 	i2c_config_t conf = {
 		.mode = I2C_MODE_MASTER,
 		.sda_io_num = pinSda,
-		.sda_pullup_en = GPIO_PULLUP_ENABLE,
+		.sda_pullup_en = GPIO_PULLUP_DISABLE,
 		.scl_io_num = pinClk,
-		.scl_pullup_en = GPIO_PULLUP_ENABLE,
+		.scl_pullup_en = GPIO_PULLUP_DISABLE,
 		{.master{
 			.clk_speed = frequency}}};
 	i2c_param_config(port, &conf);
