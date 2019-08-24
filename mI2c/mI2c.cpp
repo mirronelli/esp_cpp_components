@@ -47,8 +47,8 @@ uint8_t mI2cMaster::ReadRegister(uint8_t registerAddress)
 	result = i2c_master_cmd_begin(port, cmd, 50 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	// if (result != ESP_OK)
-	// 	throw std::exception();
+	if (result != ESP_OK)
+	 	throw std::exception();
 
 	return data;
 }
@@ -84,8 +84,8 @@ uint16_t mI2cMaster::ReadRegister16(uint8_t registerAddress)
 
 	resultData = data1 << 8 | data2;
 
-	// if (result != ESP_OK)
-	// 	throw std::exception();
+	if (result != ESP_OK)
+		throw std::exception();
 
 	return resultData;
 }
