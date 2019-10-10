@@ -11,10 +11,21 @@ mI2cSlave::mI2cSlave(i2c_port_t port, gpio_num_t pinSda, gpio_num_t pinClk, uint
 		.sda_pullup_en = enablePullUps ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
 		.scl_io_num = pinClk,
 		.scl_pullup_en = enablePullUps ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
-		{.master{
-			.clk_speed = frequency}}};
+		{
+			.slave
+			{
+				.addr_10bit_en = 0,
+				.slave_addr = 1
+			}
+		}
+	};
 	i2c_param_config(port, &conf);
-	i2c_driver_install(port, I2C_MODE_MASTER, 0, 0, 0);
+	i2c_driver_install(port, I2C_MODE_SLAVE, 512, 512, ESP_INTR_FLAG_LEVEL1);
+}
+
+void mI2cSlave::ReadData(size_t maxlen, uint8_t *buffer)
+{
+	i2c_slave_read_buffer(port, buffer, maxlen, 100'000'000);
 }
 
 mI2cSlave::~mI2cSlave()
