@@ -3,7 +3,7 @@
 THIS REPO IS NOT AN OFFICIAL PART OF THE ESP PLATFORM. 
 It is rather a simple set of c++ wrappers on top of some ESP IDF apis. I started writing this library for my own projects, so that exposing esp idf apis is simpler and object oriented. Feel free to use it or suggest changes or request other features.
 
-The library uses the CMake component mechanism as described at: https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html.
+The library uses the CMake component mechanism as described at: https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html. It can be built against the 4.0 version of ESP-IDF mostly.
 
 To incorporate it into your own projects just clone the repository and refer to it from your project's cmakelist.txt file.
 
