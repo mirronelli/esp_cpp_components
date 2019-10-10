@@ -1,18 +1,23 @@
-#include "include/mI2c.h"
+#include "include/mI2cMaster.h"
 #include "exception"
 #include "esp_log.h"
 
-mI2cMaster::mI2cMaster(i2c_port_t port, gpio_num_t pinSda, gpio_num_t pinClk, uint8_t deviceAddress, uint32_t frequency)
+mI2cMaster::mI2cMaster(i2c_port_t port, gpio_num_t pinSda, gpio_num_t pinClk, uint8_t deviceAddress, uint32_t frequency, bool enablePullUps)
 	: port{port}, pinSda{pinSda}, pinClk{pinClk}, deviceAddress{deviceAddress}, frequency{frequency}
 {
 	i2c_config_t conf = {
 		.mode = I2C_MODE_MASTER,
 		.sda_io_num = pinSda,
-		.sda_pullup_en = GPIO_PULLUP_DISABLE,
+		.sda_pullup_en = enablePullUps ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
 		.scl_io_num = pinClk,
-		.scl_pullup_en = GPIO_PULLUP_DISABLE,
-		{.master{
-			.clk_speed = frequency}}};
+		.scl_pullup_en = enablePullUps ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
+		{
+			.master
+			{
+				.clk_speed = frequency
+			}
+		}
+	};
 	i2c_param_config(port, &conf);
 	i2c_driver_install(port, I2C_MODE_MASTER, 0, 0, 0);
 }
@@ -173,4 +178,14 @@ bool mI2cMaster::Detect()
 		ESP_LOGI("mI2c", "Device detected: %d", deviceAddress);
 		return true;
 	}
+}
+
+void mI2cMaster::WriteData(size_t size, uint8_t* data)
+{
+	i2c_cmd_handle_t cmd;
+	cmd = i2c_cmd_link_create();
+	i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, (deviceAddress << 1) | I2C_MASTER_WRITE, ACK_REQUIRED);
+	i2c_master_write(cmd, data, size, ACK_REQUIRED);
+	i2c_master_stop(cmd);
 }
