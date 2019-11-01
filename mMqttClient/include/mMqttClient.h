@@ -9,6 +9,7 @@
 #include <memory>
 
 typedef void (*messageHandler)(std::string topic, std::string message, void *arg);
+typedef void (*mMqttEventHandler)(void *arg);
 
 class mMqttClient
 {
@@ -28,6 +29,8 @@ class mMqttClient
 
 public:
 	mMqttClient(std::string brokerAddress);
+	mMqttClient(std::string brokerAddress, mMqttEventHandler connectHandler, mMqttEventHandler disconnectHandler, void* handlerArg);
+	void Start();
 	int Publish(std::string topic, int qos, int retain, std::string message);
 	int PublishFormat(std::string topic, int qos, int retain, std::string format, ...);
 	void Subscribe(std::string topic, int qos, messageHandler handler, void* arg);
@@ -36,6 +39,11 @@ public:
 
 private:
 	bool isConnected = false;
+	
+	mMqttEventHandler connectHandler = nullptr;
+	mMqttEventHandler disconnectHandler = nullptr;
+	void* handlerArg = nullptr; 
+
 	std::map<std::string, mMqttHandler> handlers;
 	EventGroupHandle_t eventGroup;
 	esp_mqtt_client_handle_t clientHandle;

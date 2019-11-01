@@ -22,8 +22,20 @@ mMqttClient::mMqttClient(std::string brokerAddress)
 	cfg.user_context = this;
 
 	clientHandle = esp_mqtt_client_init(&cfg);
+}
+
+mMqttClient::mMqttClient(std::string brokerAddress, mMqttEventHandler connectHandler, mMqttEventHandler disconnectHandler, void *handlerArg)
+	: mMqttClient(brokerAddress)
+{
+	this->connectHandler = connectHandler;
+	this->disconnectHandler = disconnectHandler;
+	this->handlerArg = handlerArg;
+}
+
+void mMqttClient::Start()
+{
 	esp_mqtt_client_start(clientHandle);
-	xEventGroupWaitBits(eventGroup, MQTT_CONNECTED_BIT, false, true, 10000);
+	xEventGroupWaitBits(eventGroup, MQTT_CONNECTED_BIT, false, true, 10000/portTICK_RATE_MS);
 }
 
 esp_err_t mMqttClient::EventHandler(esp_mqtt_event_handle_t event)
@@ -34,11 +46,20 @@ esp_err_t mMqttClient::EventHandler(esp_mqtt_event_handle_t event)
 	{
 	case MQTT_EVENT_CONNECTED:
 		ESP_LOGI(client->logTag, "MQTT_EVENT_CONNECTED");
-		xEventGroupSetBits(client->eventGroup, MQTT_CONNECTED_BIT);
 		client->isConnected = true;
+		xEventGroupSetBits(client->eventGroup, MQTT_CONNECTED_BIT);
+		if (client->connectHandler != nullptr)
+		{
+			client->connectHandler(client->handlerArg);
+		}
+	
 		break;
 	case MQTT_EVENT_DISCONNECTED:
 		client->isConnected = false;
+		if (client->disconnectHandler != nullptr)
+		{
+			client->disconnectHandler(client->handlerArg);
+		}
 		break;
 	case MQTT_EVENT_DATA:
 	{

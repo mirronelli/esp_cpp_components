@@ -12,9 +12,16 @@
 
 #include "include/mWifiClient.h"
 
-mWifiClient::mWifiClient(std::string ssid, std::string password, int maxRetries)
+mWifiClient::mWifiClient(std::string ssid, std::string password, mWifiEventHandler connectHandler, mWifiEventHandler disconnectHandler, void *handlerArg) : 
+mWifiClient(ssid, password)
 {
-	maxRetries = maxRetries;
+	this->connectHandler = connectHandler;
+	this->disconnectHandler = disconnectHandler;
+	this->handlerArg = handlerArg;
+}
+
+mWifiClient::mWifiClient(std::string ssid, std::string password)
+{
 	this->ssid = ssid;
 	this->password = password;
 }
@@ -30,35 +37,34 @@ void mWifiClient::EventHandler(void *instance, esp_event_base_t base, int32_t ev
 		esp_wifi_connect();
 		break;
 	case IP_EVENT_STA_GOT_IP:
-		client->numRetries = 0;
+		ESP_LOGI(client->logTag, "GotIP");
+
+		client->isConnected = true;
 		xEventGroupSetBits(client->eventGroup, client->WIFI_CONNECTED_BIT);
+		
+		if (client->connectHandler != nullptr)
+		{
+			client->connectHandler(client->handlerArg);
+		}
 		break;
 	case WIFI_EVENT_STA_DISCONNECTED:
 	{
-		ESP_LOGI(client->logTag, "diconnected from AP");
-		xEventGroupClearBits(client->eventGroup, client->WIFI_CONNECTED_BIT);
+		client->isConnected = false;
 
 		// intended disconnect
 		if (client->explicitDiconectRequested)
 		{
-			ESP_LOGI(client->logTag, "caused by explicit disconnect request from code");
-			client->explicitDiconectRequested = false;
-			client->isConnected = false;
+			ESP_LOGI(client->logTag, "Explicit disconnect.");
 		}
-		// unintended disconnect
-		else
+		else 
 		{
-			if (client->numRetries < client->maxRetries)
-			{
-				ESP_LOGI(client->logTag, "Retrying num retries %d/%d", client->numRetries, client->maxRetries);
-				esp_wifi_connect();
-				client->numRetries++;
-			}
-			else
-			{
-				ESP_LOGI(client->logTag, "numretries: %d is over maxretries:%d", client->numRetries, client->maxRetries);
-				client->isConnected = false;
-			}
+			ESP_LOGI(client->logTag, "Unexpected disconnect.");
+		}
+		client->explicitDiconectRequested = false;
+
+		if (client->disconnectHandler != nullptr)
+		{
+			client->disconnectHandler(client);
 		}
 
 		break;
@@ -100,17 +106,13 @@ bool mWifiClient::Connect(uint16_t timeout)
 {
 	Init();
 
-	numRetries = 0;
-
 	ESP_LOGI(logTag, "Connecting to AP: %s", ssid.c_str());
+
+	xEventGroupClearBits(eventGroup, WIFI_CONNECTED_BIT);
 	ESP_ERROR_CHECK(esp_wifi_start());
 	ESP_ERROR_CHECK(esp_wifi_connect());
+	xEventGroupWaitBits(eventGroup, WIFI_CONNECTED_BIT, false, true, timeout / portTICK_RATE_MS);
 
-	EventBits_t waitResult = xEventGroupWaitBits(eventGroup, WIFI_CONNECTED_BIT, false, true, timeout / portTICK_RATE_MS);
-	if ((waitResult & WIFI_CONNECTED_BIT) == WIFI_CONNECTED_BIT)
-		isConnected = true;
-
-	numRetries = 0;
 	return isConnected;
 }
 
