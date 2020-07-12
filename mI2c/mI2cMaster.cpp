@@ -20,6 +20,23 @@ mI2cMaster::mI2cMaster(i2c_port_t port, gpio_num_t pinSda, gpio_num_t pinClk, ui
 	};
 	i2c_param_config(port, &conf);
 	i2c_driver_install(port, I2C_MODE_MASTER, 0, 0, 0);
+
+	int a, b;
+
+	i2c_get_period(port, &a, &b);
+	ESP_LOGI(logTag, "High period %d, low period %d", a, b);
+
+	i2c_get_start_timing(port, &a, &b);
+	ESP_LOGI(logTag, "Start timing. Setup timing %d, Hold time %d", a, b);
+
+	i2c_get_stop_timing(port, &a, &b);
+	ESP_LOGI(logTag, "Stop timing. Setup timing %d, Hold time %d", a, b);
+
+	i2c_get_data_timing(port, &a, &b);
+	ESP_LOGI(logTag, "Data timing. Sample timing %d, Hotd time %d", a, b);
+
+	i2c_get_timeout(port, &a);
+	ESP_LOGI(logTag, "Timeout %d", a);
 }
 
 mI2cMaster::~mI2cMaster()
@@ -60,6 +77,7 @@ uint8_t mI2cMaster::ReadRegister(uint8_t registerAddress)
 
 uint16_t mI2cMaster::ReadRegister16(uint8_t registerAddress)
 {
+	ESP_LOGI(logTag, "Read from i2c register %d",  registerAddress);
 	uint8_t data1 = 0;
 	uint8_t data2 = 0;
 	uint16_t resultData = 0;
@@ -73,19 +91,23 @@ uint16_t mI2cMaster::ReadRegister16(uint8_t registerAddress)
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (deviceAddress << 1) | I2C_MASTER_WRITE, ACK_REQUIRED);
 	i2c_master_write_byte(cmd, registerAddress, ACK_REQUIRED);
+	i2c_master_stop(cmd);
+	result = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_PERIOD_MS);
+	i2c_cmd_link_delete(cmd);
+	ESP_LOGI(logTag, "Write result: %d", result);
 
+	cmd = i2c_cmd_link_create();
 	// Read from register
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (deviceAddress << 1) | I2C_MASTER_READ, ACK_REQUIRED);
 	i2c_master_read_byte(cmd, &data1, I2C_MASTER_ACK);
-	i2c_master_read_byte(cmd, &data2, I2C_MASTER_ACK);
-
-	// Write stop sequence
+	i2c_master_read_byte(cmd, &data2, I2C_MASTER_NACK);
 	i2c_master_stop(cmd);
 
+
 	// Execute queue and destroy cmd
-	result = i2c_master_cmd_begin(port, cmd, 50 / portTICK_RATE_MS);
-	i2c_cmd_link_delete(cmd);
+	result = i2c_master_cmd_begin(port, cmd, 1000 / portTICK_PERIOD_MS);
+	ESP_LOGI(logTag, "Read result: %d", result);
 
 	resultData = data1 << 8 | data2;
 
@@ -123,32 +145,30 @@ void mI2cMaster::WriteRegister16(uint8_t registerAddress, uint16_t data)
 {
 	i2c_cmd_handle_t cmd;
 	esp_err_t result;
+
 	uint8_t msb = data >> 8;
 	uint8_t lsb = data & 0xff;
 
-	ESP_LOGI("mI2c", "MSB %x", msb);
-	ESP_LOGI("mI2c", "LSB: %x", lsb);
-
 	cmd = i2c_cmd_link_create();
 
-	// Write register address to device, followed by msb an lsb
+	// Prepare statements
 	i2c_master_start(cmd);
-
 	i2c_master_write_byte(cmd, (deviceAddress << 1) | I2C_MASTER_WRITE, ACK_REQUIRED);
 	i2c_master_write_byte(cmd, registerAddress, ACK_REQUIRED);
 	i2c_master_write_byte(cmd, msb, ACK_REQUIRED);
 	i2c_master_write_byte(cmd, lsb, ACK_REQUIRED);
-
-	// Write stop sequence
 	i2c_master_stop(cmd);
 
 	// Execute queue and destroy cmd
 	result = i2c_master_cmd_begin(port, cmd, 50 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
-
-	if (result != ESP_OK){
-		ESP_LOGI("mI2c", "error writing register: %d", result);
-		//throw std::exception();
+	
+	if (result == ESP_OK){
+		ESP_LOGI(logTag, "Written %x to register %d with result %d", data, registerAddress, result);
+	}
+	else {
+		ESP_LOGI("mI2c", "Error writing register: %d", result);
+		throw std::exception();
 	}
 }
 
@@ -180,6 +200,7 @@ bool mI2cMaster::Detect()
 	}
 }
 
+/* This is a non working version. Do not use. */
 void mI2cMaster::WriteData(size_t size, uint8_t* data)
 {
 	i2c_cmd_handle_t cmd;
